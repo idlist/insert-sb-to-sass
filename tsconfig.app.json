@@ -25,7 +25,8 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@src/*": ["./src/*"],
+      "@site/*": ["./site/*"]
     }
   },
   "include": ["site/**/*.ts", "site/**/*.tsx", "site/**/*.vue"]
