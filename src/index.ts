@@ -166,6 +166,7 @@ const modifyLines = (lines: Line[], config: InsertSbConfig) => {
         isProperty = false
         const delta = prevLine.indentLevel - line.indentLevel
         insertClosingBrackets(p, prevLine, delta)
+
         i += delta
         offset += delta
       }
