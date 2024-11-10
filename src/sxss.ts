@@ -1,35 +1,43 @@
-import { InsertSbConfig } from './insert-sb'
+export interface SxssConfig {
+  input: {
+    tabSize: number
+  },
+  output: {
+    indentType: 'tab' | 'space'
+    tabSize: number
+    endOfLine: string
+  }
+}
 
 export interface Line {
   rawExists: boolean
   isIgnorable: boolean
   raw: string
-  rawTrimmed: string
-  rawIndent: number
+  rawIndentSpace: number
   indentLevel: number
   lineNo: number
-  modified: string
-  modifiedLineNo: number
+  content: string
+  contentLineNo: number
 }
 
 const countIndent = (raw: string, tabSize: number) => {
-  let countRaw = 0
-  let count = 0
+  let countChar = 0
+  let countSpace = 0
   for (const letter of raw) {
     if (letter == '\t') {
-      countRaw++
-      count += tabSize
+      countChar++
+      countSpace += tabSize
     }
     else if (letter == ' ') {
-      countRaw++
-      count++
+      countChar++
+      countSpace++
     }
     else break
   }
 
   return {
-    count,
-    trimmed: raw.substring(countRaw),
+    countChar,
+    countSpace,
   }
 }
 
@@ -47,7 +55,7 @@ export default class Sxss {
   public indentChar: string
 
   constructor(
-    public config: InsertSbConfig,
+    public config: SxssConfig,
   ) {
     this.indentChar = this._getIndentChar()
   }
@@ -65,15 +73,15 @@ export default class Sxss {
     return this.indentChar.repeat(level)
   }
 
-  findPrevIndex(i: number) {
+  findPrevIndex(i: number, condition: (p: number) => boolean = () => true) {
     for (let p = i - 1; p >= 0; p--) {
-      if (!this.lines[p].isIgnorable) return p
+      if (condition(p)) return p
     }
   }
 
-  findNextIndex(i: number) {
+  findNextIndex(i: number, condition: (n: number) => boolean = () => true) {
     for (let n = i + 1; n < this.lines.length; n++) {
-      if (!this.lines[n].isIgnorable) return n
+      if (condition(n)) return n
     }
   }
 
@@ -83,39 +91,41 @@ export default class Sxss {
 
     const indentStack: number[] = [0]
     const getIndent = (i: number = 0) => indentStack[i >= 0 ? i : indentStack.length + i]
-    const getIndentLevel = () => indentStack.length - 1
+    let indentLevel = 0
 
     for (const [i, raw] of rawLines.entries()) {
-      const { count: rawIndent, trimmed } = countIndent(raw, tabSize)
-      const isIgnorable = /^[\t ]*[\/\/.*]?$/.test(raw)
+      const { countSpace, countChar } = countIndent(raw, tabSize)
+      const trimmed = raw.slice(countChar)
 
-      if (!isIgnorable) {
-        if (rawIndent > getIndent(-1)) {
-          indentStack.push(rawIndent)
-        }
+      if (countSpace > getIndent(-1)) {
+        indentStack.push(countSpace)
+        indentLevel++
+      }
 
-        while (rawIndent < getIndent(-1)) {
+      while (countSpace < getIndent(-1)) {
+        if (indentStack.length > 1) {
           indentStack.pop()
         }
+        indentLevel--
+        indentStack[indentStack.length - 1] = countSpace
       }
 
       this.lines.push({
         rawExists: true,
-        isIgnorable,
+        isIgnorable: /^[\t ]*$/.test(trimmed),
         raw,
-        rawIndent,
-        rawTrimmed: trimmed,
-        indentLevel: getIndentLevel(),
+        rawIndentSpace: countSpace,
+        indentLevel,
         lineNo: i,
-        modified: raw,
-        modifiedLineNo: i,
+        content: trimmed,
+        contentLineNo: i,
       })
     }
 
     return this
   }
 
-  process<T extends object, U extends object>(
+  process<T extends object = object, U extends object = object>(
     setup: T | (() => T),
     lineSetup: U | (() => U),
     lineProcessors: ((line: Line, vars: T & U & LineHandler) => Partial<T & U & LineHandler> | void)[] = [],
@@ -166,7 +176,13 @@ export default class Sxss {
     return this
   }
 
-  join() {
-    return this.lines.map((line) => line.modified).join(this.config.output.endOfLine)
+  join(lineProcessor: (indented: string, line: Line) => string = (indented) => indented) {
+    return this.lines
+      .map((line) => {
+        const indented = `${this.indent(line.indentLevel)}${line.content}`
+        const processed = lineProcessor(indented, line)
+        return processed
+      })
+      .join(this.config.output.endOfLine)
   }
 }
