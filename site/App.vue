@@ -96,7 +96,7 @@ const placeholderInserted = computed(() => insertSb(placeholder, options.value))
 
         <label>
           Tab size
-          <input v-model="inputTabSize"
+          <input v-model.number="inputTabSize"
             type="text"
             name="inputTabSize"
             :disabled="inputInsertTab" />
