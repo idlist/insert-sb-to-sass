@@ -60,45 +60,55 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
     (line, { indentLevelOffset }) => {
       line.indentLevel += indentLevelOffset
     },
-    // Process line comments.
-    (line, { i }) => {
-      const has = /[\t ]\/\/.*/.exec(line.content)
-      if (!has) return
-
-      const { start, str } = firstMatched(has)
-      if (start == 0) {
-        line.isIgnorable = true
-        return { blockCommentStartIndex: i }
-      } else {
-        line.content = line.content.slice(0, start)
-        line.commentTrailing = str
-      }
-    },
-    // Process block comments.
+    // Process multi-line comments.
     (line, { i }) => {
       let rest = line.content
-      let isComment = false
+      let hasBlockComment = false
       let hasContent = false
 
       while (rest) {
-        const hasStart = /^[\t ]*\/\*/.exec(rest)
-        if (!hasStart) break
+        const hasLine = /[\t ]*\/\/.*/.exec(rest)
+        const hasBlock = /[\t ]*\/\*/.exec(rest)
+        if (!hasLine && !hasBlock) return
 
-        isComment = true
-        const start = firstMatched(hasStart)
-        const after = rest.slice(start.end)
-        const hasEnd = /\*\//.exec(after)
-        if (hasEnd) {
-          const end = firstMatched(hasEnd)
-          rest = rest.slice(start.end + end.end)
+        const haveBoth = hasLine != null && hasBlock != null
+        let prior: undefined | 'line' | 'block'
+        if (haveBoth) {
+          const lineMatched = firstMatched(hasLine)
+          const blockMatched = firstMatched(hasBlock)
+          prior = lineMatched.start < blockMatched.start ? 'line' : 'block'
+        }
+
+        if (hasLine && !hasBlock || haveBoth && prior == 'line') {
+          const { start, str } = firstMatched(hasLine)
+          if (start == 0) {
+            line.isIgnorable = true
+            return { blockCommentStartIndex: i }
+          } else {
+            hasContent = true
+            line.content = line.content.slice(0, start)
+            line.commentTrailing = str
+            break
+          }
+        }
+        if (hasBlock && !hasLine || haveBoth && prior == 'block') {
+          const start = firstMatched(hasBlock)
+          hasBlockComment = true
           if (start.start != 0) hasContent = true
-        } else {
-          line.isIgnorable = true
-          return { blockCommentStartIndex: i }
+
+          const after = rest.slice(start.end)
+          const hasBlockEnd = /\*\//.exec(after)
+          if (hasBlockEnd) {
+            const end = firstMatched(hasBlockEnd)
+            rest = rest.slice(start.end + end.end)
+          } else {
+            line.isIgnorable = true
+            return { blockCommentStartIndex: i }
+          }
         }
       }
 
-      if (isComment && !hasContent) line.isIgnorable = true
+      if (hasBlockComment && !hasContent) line.isIgnorable = true
     },
   ])
 
@@ -211,7 +221,9 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
 
 const modified = insertSb(`
 .a
-  color: red // /*
+  /* comment 1 */
+  color: red /* // */
+  color: blue // /*
 `)
 
 console.log(modified)
