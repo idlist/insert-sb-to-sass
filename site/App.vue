@@ -42,6 +42,10 @@ const naiveKeydown = (e: KeyboardEvent) => {
   }
 }
 
+const copyOutput = () => {
+  navigator.clipboard.writeText(outputContent.value)
+}
+
 const placeholder = `@use "sass:list"
 @use "sass:color"
 
@@ -145,7 +149,13 @@ const placeholderInserted = computed(() => insertSb(placeholder, options.value))
           readonly
           name="output area"
           :placeholder="placeholderInserted">
-      </textarea>
+        </textarea>
+        <button
+          type="button"
+          class="output-copy"
+          @click="copyOutput">
+          Copy
+        </button>
       </div>
     </div>
   </div>
@@ -175,6 +185,7 @@ code {
   font-size: 0.875em;
   background-color: hsla(0, 0%, 0%, 0.1);
   border-radius: 0.25rem;
+  padding: 0.125rem;
 }
 
 h1 {
@@ -224,14 +235,14 @@ h1 {
   &-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.25rem 0.5rem;
     align-items: center;
   }
 
   &-category {
     font-size: 0.875rem;
-    background-color: hsla(0, 0%, 0%, 0.75);
-    color: hsl(0, 0%, 100%);
+    background-color: hsla(0, 0%, 0%, 0.8);
+    color: white;
     padding: 0.25rem 0.375rem;
     border-radius: 0.25rem;
   }
@@ -258,7 +269,29 @@ h1 {
   padding: 0.5rem;
 
   &::placeholder {
-    color: hsla(0, 0%, 0%, 0.35)
+    color: hsla(0, 0%, 0%, 0.25)
+  }
+
+  border: 1px solid hsla(0, 0%, 0%, 0.8);
+  border-radius: 0.25rem;
+}
+
+.output {
+  position: relative;
+}
+
+.output-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  padding: 0.5rem;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 0.25rem;
+
+  &:hover,
+  &:active {
+    background-color: hsla(0, 0%, 0%, 0.05)
   }
 }
 </style>
