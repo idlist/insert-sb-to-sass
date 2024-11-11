@@ -2,8 +2,6 @@
 
 Help insert semicolons and brackets to Sass to make its transition to SCSS easier.
 
-> WIP and not really usable.
-
 ## Why?
 
 I really liked Sass for it being concise and having dense information. However, there are some pain points that I cannot ignore over times:
@@ -17,11 +15,47 @@ I really liked Sass for it being concise and having dense information. However, 
 - It's a string / line based method. Sass is not parsed into some AST.
   - On the other hand, it might be less affected when some new syntax is introduced.
 - It assumes that the input Sass is not ill-formatted (i.e., the indentations are aligned nicely)
-- Overall, it's not a syntactic Sass to SCSS converter. It's supposedly to help you (and myself) to do less work.
+- Overall, **it's not a syntactic Sass to SCSS converter**.
+  - It's supposedly to help you (and mainly myself) to do less work.
+  - Using a separate formatter afterwards is still recommended.
+
+## As a module
+
+The main function `insertSb` (and the type for its options `InsertSbOptions`) is provided in npm package `insert-sb-to-sass`.
+
+```ts
+function insertSb(content: string, options?: PartialDeep<InsertSbOptions>): string
+```
+
+`content`: Sass string.
+
+`options`: Some options:
+
+```ts
+export interface InsertSbOptions {
+  input: {
+    tabSize: number
+  },
+  output: {
+    indentType: 'tab' | 'space'
+    indentSize: number
+    endOfLine: string
+  }
+}
+```
+
+- `input.tabSize`: How many spaces a tab equals. Needed when the indentations are a mix of spaces and tabs (though who would code in this way?). Defaults to `2`.
+- `output.indentType`: Use `tab` or `space` for the indentation. Defaults to `space`.
+- `output.indentSize`: Number of spaces of one indentation level. Defaults to `2`.
+- `output.endOfLine`: End of the line. Defaults to `\n` (LF).
 
 ## Todo
 
 - [x] Convert Sass mixin shorthand to full at-rule
-- [ ] A simple website that can do the insertion in the browser
-- [ ] A CLI? (don't very have the time...)
-- [ ] The inversion? (batch replacing all `{};` to empty string works for most of times, and I doubt if it's necessary)
+- [x] A simple website that can do the insertion in the browser
+- [ ] A CLI...? (don't very have the time...)
+- [ ] The inversion...? (using internal editor replacement to delete all `{};` works for most of times)
+
+## License
+
+MIT © i'DLisT 2024
