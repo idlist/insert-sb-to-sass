@@ -54,7 +54,7 @@ export interface InsertSbOptions {
 - [x] Convert Sass mixin shorthand to full at-rule
 - [x] A simple website that can do the insertion in the browser
 - [ ] A CLI...? (don't very have the time...)
-- [ ] The inversion...? (using internal editor replacement to delete all `{};` works for most of times)
+- [ ] The inversion...? (using editors' replacement function to delete trailing `{};`s works for most of the times)
 
 ## License
 
