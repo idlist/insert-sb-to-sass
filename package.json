@@ -2,6 +2,30 @@
   "name": "insert-sb-to-sass",
   "version": "0.1.0",
   "type": "module",
+  "description": "Help insert semicolons and brackets to Sass.",
+  "author": "i'DLisT <i@idl.ist> (https://idl.ist/)",
+  "license": "MIT",
+  "files": [
+    "lib"
+  ],
+  "types": "./lib/index.d.ts",
+  "module": "./lib/index.js",
+  "main": "./lib/index.umd.cjs",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js",
+      "require": "./lib/index.umd.cjs"
+    }
+  },
+  "homepage": "https://github.com/idlist/insert-sb-to-sass#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idlist/insert-sb-to-sass.git"
+  },
+  "bugs": {
+    "url": "https://github.com/idlist/insert-sb-to-sass/issues"
+  },
   "scripts": {
     "dev": "vitest",
     "dev:site": "vite --config vite.site.config.ts",
@@ -10,7 +34,8 @@
     "build:type": "tsc --project tsconfig.prod.json",
     "build:site": "vue-tsc -b && vite build --config vite.site.config.ts",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build:lib"
   },
   "dependencies": {
     "type-fest": "^4.26.1"
