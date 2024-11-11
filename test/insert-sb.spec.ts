@@ -23,7 +23,7 @@ describe('Indent & dedent', () => {
 }`)
   })
 
-  it('compound case', () => {
+  it('compound indent', () => {
     assert.equal(insertSb(`
 .a
   color: red

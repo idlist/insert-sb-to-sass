@@ -2,7 +2,7 @@ import { PartialDeep } from 'type-fest'
 import Sxss, { type SxssConfig } from './sxss'
 import { firstMatched } from './utils'
 
-export interface InsertSbConfig extends SxssConfig {
+export interface InsertSbOptions extends SxssConfig {
 }
 
 declare module './sxss' {
@@ -11,15 +11,15 @@ declare module './sxss' {
   }
 }
 
-export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>) => {
-  const config: InsertSbConfig = {
+export const insertSb = (content: string, options?: PartialDeep<InsertSbOptions>) => {
+  const config: InsertSbOptions = {
     input: {
       tabSize: 2,
       ...options?.input,
     },
     output: {
       indentType: 'space',
-      tabSize: 2,
+      indentSize: 2,
       endOfLine: '\n',
       ...options?.output,
     },
@@ -42,7 +42,7 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
   }, {}, [
     // Process indented comments.
     (line, { i, multiLineCommentType, multiLineCommentStartIndex, indentLevelOffset }) => {
-      if (!multiLineCommentStartIndex) return
+      if (typeof multiLineCommentStartIndex == 'undefined') return
       const startLine = sxss.lines[multiLineCommentStartIndex]
 
       if (line.rawIndentSpace > startLine.rawIndentSpace) {
@@ -56,7 +56,7 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
         return { continue: true }
       } else {
         const delta = startLine.indentLevel - line.indentLevel
-        if (multiLineCommentType == 'block') {
+        if (multiLineCommentType == 'block' && !sxss.lines[i - 1].content.includes('*/')) {
           sxss.lines[i - 1].content += ' */'
         }
         return {
@@ -132,7 +132,7 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
     },
   ])
 
-  const insertClosingBrackets = (p: number, delta: number) => {
+  const insertClosingBrackets = (p: number, delta: number, offset: number) => {
     const prevLine = sxss.lines[p]
 
     for (let j = 0; j < delta; j++) {
@@ -146,7 +146,7 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
         indentLevel: level,
         lineNo: prevLine.lineNo,
         content: '}',
-        contentLineNo: prevLine.lineNo + j + 1,
+        contentLineNo: prevLine.lineNo + j + offset + 1,
       })
     }
   }
@@ -205,12 +205,11 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
 
       if (line.indentLevel < prevLine.indentLevel) {
         const delta = prevLine.indentLevel - line.indentLevel
-        insertClosingBrackets(p, delta)
+        insertClosingBrackets(p, delta, lineNoOffset)
 
         return {
-          isStatement: false,
           i: i += delta,
-          lineNoOffset: lineNoOffset += delta,
+          lineNoOffset: lineNoOffset + delta,
         }
       }
     },
@@ -226,14 +225,16 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
     },
   ], [
     // Dedent to level 0 if the last line is not level 0.
-    () => {
+    ({ lineNoOffset }) => {
       const l = sxss.findPrevIndex(sxss.lines.length, (p) => !sxss.lines[p].isIgnorable)
       if (!l) return
 
       const lastLine = sxss.lines[l]
-      insertClosingBrackets(l, lastLine.indentLevel)
+      insertClosingBrackets(l, lastLine.indentLevel, lineNoOffset)
     },
   ])
+
+  // console.log(sxss.lines)
 
   return sxss.join((indented, line) => {
     const trailing = line.commentTrailing ?? ''

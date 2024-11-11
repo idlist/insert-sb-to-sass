@@ -4,7 +4,7 @@ export interface SxssConfig {
   },
   output: {
     indentType: 'tab' | 'space'
-    tabSize: number
+    indentSize: number
     endOfLine: string
   }
 }
@@ -63,7 +63,7 @@ export default class Sxss {
   private _getIndentChar() {
     switch (this.config.output.indentType) {
       case 'space':
-        return ' '.repeat(this.config.output.tabSize)
+        return ' '.repeat(this.config.output.indentSize)
       case 'tab':
         return '\t'
     }

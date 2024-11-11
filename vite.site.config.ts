@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@src': __dirname('./site'),
+      '@src': __dirname('./src'),
       '@site': __dirname('./site'),
     },
   },
@@ -33,6 +33,9 @@ export default defineConfig({
         api: 'modern-compiler',
       },
     },
+  },
+  server: {
+    host: true,
   },
   build: {
     rollupOptions: {

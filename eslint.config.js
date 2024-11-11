@@ -23,10 +23,11 @@ export default ts.config(
     rules: {
       'vue/html-closing-bracket-newline': ['off'],
       'vue/first-attribute-linebreak': ['off'],
+      'vue/singleline-html-element-content-newline': ['off'],
+
       'vue/html-indent': ['warn', 2, {
         alignAttributesVertically: false,
       }],
-
       'vue/max-attributes-per-line': ['warn', {
         singleline: { max: Number.POSITIVE_INFINITY },
         multiline: { max: 1 },

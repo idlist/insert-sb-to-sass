@@ -26,6 +26,14 @@ describe('Comments', () => {
 }`)
   })
 
+  it('multi-line line comment only', () => {
+    assert.equal(insertSb(`
+// comment 1
+   comment 2`), `
+// comment 1
+// comment 2`)
+  })
+
   it('multi-line line comment having indent inside comment 1', () => {
     assert.equal(insertSb(`
 .a
@@ -110,6 +118,19 @@ describe('Comments', () => {
 .a {
   /* comment 1 */ // comment 2
   color: /* comment 3 */ red; // comment 4
+}`)
+  })
+
+  it('mixed line and multi-line block comment', () => {
+    assert.equal(insertSb(`
+.a
+  /* comment 1
+   */ // comment 2
+  color: red`), `
+.a {
+  /* comment 1
+   */ // comment 2
+  color: red;
 }`)
   })
 

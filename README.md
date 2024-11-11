@@ -8,9 +8,9 @@ Help insert semicolons and brackets to Sass to make its transition to SCSS easie
 
 I really liked Sass for it being concise and having dense information. However, there are some pain points that I cannot ignore over times:
 
-- Sass have somewhat less tooling support (especially when it comes to other libraries or frameworks that let you use Sass but didn't do very well with the integration);
+- Sass have somewhat less tooling support (especially when it comes to other libraries or frameworks that *supports* Sass but didn't do very well in their toolings);
 - Sometimes CSS is enough, but switching between Sass and CSS is a bit of hassle.
-- Somethimes CSS can get very long, yet Sass doesn't have a multi-line syntax.
+- Sometimes CSS can get very long, yet Sass doesn't have a multi-line syntax.
 
 ## Limitations
 
@@ -21,6 +21,7 @@ I really liked Sass for it being concise and having dense information. However, 
 
 ## Todo
 
-- [ ] Convert Sass mixin shorthand to full at-rule
+- [x] Convert Sass mixin shorthand to full at-rule
 - [ ] A simple website that can do the insertion in the browser
 - [ ] A CLI? (don't very have the time...)
+- [ ] The inversion? (batch replacing all `{};` to empty string works for most of times, and I doubt if it's necessary)
