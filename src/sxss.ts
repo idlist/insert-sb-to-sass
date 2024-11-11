@@ -105,9 +105,10 @@ export default class Sxss {
       while (countSpace < getIndent(-1)) {
         if (indentStack.length > 1) {
           indentStack.pop()
+        } else {
+          indentStack[0] = countSpace
         }
         indentLevel--
-        indentStack[indentStack.length - 1] = countSpace
       }
 
       this.lines.push({

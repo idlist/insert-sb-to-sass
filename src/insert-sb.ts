@@ -29,7 +29,8 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
   sxss.parse(content)
 
   interface ProcessVarsComment {
-    blockCommentStartIndex?: number
+    multiLineCommentType?: 'line' | 'block'
+    multiLineCommentStartIndex?: number
     indentLevelOffset: number
   }
 
@@ -40,18 +41,27 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
     indentLevelOffset: 0,
   }, {}, [
     // Process indented comments.
-    (line, { blockCommentStartIndex, indentLevelOffset }) => {
-      if (!blockCommentStartIndex) return
-      const startLine = sxss.lines[blockCommentStartIndex]
+    (line, { i, multiLineCommentType, multiLineCommentStartIndex, indentLevelOffset }) => {
+      if (!multiLineCommentStartIndex) return
+      const startLine = sxss.lines[multiLineCommentStartIndex]
 
       if (line.rawIndentSpace > startLine.rawIndentSpace) {
         line.indentLevel = startLine.indentLevel + 1
         line.isIgnorable = true
+        line.content = line.raw
+        if (multiLineCommentType == 'line') {
+          const j = startLine.rawIndentSpace
+          line.content = line.content.slice(0, j) + '//' + line.raw.slice(j + 2)
+        }
         return { continue: true }
       } else {
         const delta = startLine.indentLevel - line.indentLevel
+        if (multiLineCommentType == 'block') {
+          sxss.lines[i - 1].content += ' */'
+        }
         return {
-          blockCommentStartIndex: undefined,
+          multiLineCommentType: undefined,
+          multiLineCommentStartIndex: undefined,
           indentLevelOffset: indentLevelOffset += delta,
         }
       }
@@ -63,6 +73,7 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
     // Process multi-line comments.
     (line, { i }) => {
       let rest = line.content
+      let offset = 0
       let hasBlockComment = false
       let hasContent = false
 
@@ -82,11 +93,15 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
         if (hasLine && !hasBlock || haveBoth && prior == 'line') {
           const { start, str } = firstMatched(hasLine)
           if (start == 0) {
+            line.content = line.raw
             line.isIgnorable = true
-            return { blockCommentStartIndex: i }
+            return {
+              multiLineCommentType: 'line',
+              multiLineCommentStartIndex: i,
+            }
           } else {
             hasContent = true
-            line.content = line.content.slice(0, start)
+            line.content = line.content.slice(0, start + offset)
             line.commentTrailing = str
             break
           }
@@ -101,9 +116,14 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
           if (hasBlockEnd) {
             const end = firstMatched(hasBlockEnd)
             rest = rest.slice(start.end + end.end)
+            offset += start.end + end.end
           } else {
+            line.content = line.raw
             line.isIgnorable = true
-            return { blockCommentStartIndex: i }
+            return {
+              multiLineCommentType: 'block',
+              multiLineCommentStartIndex: i,
+            }
           }
         }
       }
@@ -155,9 +175,14 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
     },
     // Process multi-lined selectors separated by comma.
     (line) => {
-      if (line.raw.endsWith(',')) {
+      if (line.content.endsWith(',')) {
         return { isStatement: false }
       }
+    },
+    // Process indented @mixin and @include.
+    (line) => {
+      line.content = line.content.replace(/^\=/, '@mixin ')
+      line.content = line.content.replace(/^\+/, '@include ')
     },
     // Process indent.
     (line, { i }) => {
@@ -202,7 +227,7 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
   ], [
     // Dedent to level 0 if the last line is not level 0.
     () => {
-      const l = sxss.findPrevIndex(sxss.lines.length - 1)
+      const l = sxss.findPrevIndex(sxss.lines.length, (p) => !sxss.lines[p].isIgnorable)
       if (!l) return
 
       const lastLine = sxss.lines[l]
@@ -211,19 +236,11 @@ export const insertSb = (content: string, options?: PartialDeep<InsertSbConfig>)
   ])
 
   return sxss.join((indented, line) => {
+    const trailing = line.commentTrailing ?? ''
     if (line.isIgnorable) {
-      return line.raw
+      return `${line.content}${trailing}`
     } else {
-      return `${indented}${line.commentTrailing ?? ''}`
+      return `${indented}${trailing}`
     }
   })
 }
-
-const modified = insertSb(`
-.a
-  /* comment 1 */
-  color: red /* // */
-  color: blue // /*
-`)
-
-console.log(modified)

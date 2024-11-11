@@ -9,6 +9,7 @@
     "build:lib": "vite build && npm run build:type",
     "build:type": "tsc --project tsconfig.prod.json",
     "build:site": "vue-tsc -b && vite build --config vite.site.config.ts",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {

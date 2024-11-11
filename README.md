@@ -6,10 +6,11 @@ Help insert semicolons and brackets to Sass to make its transition to SCSS easie
 
 ## Why?
 
-I really liked Sass for it being concise and having dense information. However, there are two big pain points that I cannot ignore over times:
+I really liked Sass for it being concise and having dense information. However, there are some pain points that I cannot ignore over times:
 
 - Sass have somewhat less tooling support (especially when it comes to other libraries or frameworks that let you use Sass but didn't do very well with the integration);
-- Sometimes CSS is enough, but switching between Sass and CSS is a bit painful when it comes to inserting and removing semicolons and brackets.
+- Sometimes CSS is enough, but switching between Sass and CSS is a bit of hassle.
+- Somethimes CSS can get very long, yet Sass doesn't have a multi-line syntax.
 
 ## Limitations
 
